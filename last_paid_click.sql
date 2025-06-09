@@ -1,4 +1,4 @@
-WITH last_paid_click AS (
+WITH visitors_with_leads AS (
     SELECT DISTINCT ON (s.visitor_id)
         s.visitor_id,
         s.visit_date,
@@ -17,19 +17,17 @@ WITH last_paid_click AS (
         ON s.visitor_id = l.visitor_id
         AND s.visit_date <= l.created_at
     WHERE
-        s.medium IN ('cpc', 'cpm', 'cpa', 'youtube', 'cpp', 'tg', 'social')
+        s.medium != 'organic'
     ORDER BY 
         s.visitor_id, s.visit_date DESC
 )
 SELECT *
 FROM 
-	last_paid_click 
+	visitors_with_leads
 ORDER BY
-    amount DESC NULLS LAST,
+    amount DESC nulls last,
     visit_date,
     utm_source,
     utm_medium,
     utm_campaign
 LIMIT 10;
-	
-
