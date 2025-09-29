@@ -104,7 +104,7 @@ SELECT
     visit_day,
     SOURCE;
 
---Детальные метрики
+--Эффективность рекламных кампаний
 SELECT
     utm_source,
     utm_medium,
@@ -124,10 +124,30 @@ SELECT
     utm_source,
     utm_medium,
     utm_campaign
+  ORDER BY
+    roi DESC NULLS LAST;
+
+--Эффективность рекламных каналов
+SELECT
+    utm_source,
+    SUM(visitors_count) AS visitors_count,
+    SUM(leads_count) AS leads_count,
+    SUM(purchases_count) AS purchases_count,
+    SUM(revenue) AS revenue,
+    SUM(total_cost) AS total_cost,
+    ROUND(SUM(total_cost) / NULLIF(SUM(visitors_count), 0), 2) AS cpu,
+    ROUND(SUM(total_cost) / NULLIF(SUM(leads_count), 0), 2) AS cpl,
+    ROUND(SUM(total_cost) / NULLIF(SUM(purchases_count), 0), 2) AS cppu,
+    ROUND((
+      SUM(revenue) - SUM(total_cost)
+    ) * 100.0 / NULLIF(SUM(total_cost), 0), 2) AS roi
+  FROM final
+  GROUP BY
+    utm_source
   HAVING
     SUM(purchases_count) > 0
   ORDER BY
-    roi DESC NULLS LAST;
+    roi DESC NULLS LAST
 
 --воронка конверсий
 aggregated_data AS (
