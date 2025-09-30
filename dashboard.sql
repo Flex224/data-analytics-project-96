@@ -208,4 +208,3 @@ SELECT
     purchases AS total_count
 FROM
     aggregated_data;
-
