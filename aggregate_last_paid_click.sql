@@ -55,23 +55,36 @@ ad_costs AS (
         SUM(daily_spent) AS total_cost
     FROM vk_ads
     GROUP BY 1, 2, 3, 4
+),
+final AS (
+    SELECT
+        u.visit_date,
+        u.utm_source,
+        u.utm_medium,
+        u.utm_campaign,
+        u.visitors_count,
+        COALESCE(a.total_cost, 0) AS total_cost,
+        u.leads_count,
+        u.purchases_count,
+        COALESCE(u.revenue, 0) AS revenue
+    FROM utm_aggregates AS u
+    LEFT JOIN ad_costs AS a
+        ON  u.visit_date = a.visit_date
+        AND u.utm_source = a.utm_source
+        AND u.utm_medium = a.utm_medium
+        AND u.utm_campaign = a.utm_campaign
 )
 SELECT
-    u.visit_date,
-    u.utm_source,
-    u.utm_medium,
-    u.utm_campaign,
-    u.visitors_count,
-    a.total_cost,
-    u.leads_count,
-    u.purchases_count,
-    u.revenue
-FROM utm_aggregates AS u
-LEFT JOIN ad_costs AS a
-    ON  u.visit_date = a.visit_date
-    AND u.utm_source = a.utm_source
-    AND u.utm_medium = a.utm_medium
-    AND u.utm_campaign = a.utm_campaign
+    visit_date,
+    utm_source,
+    utm_medium,
+    utm_campaign,
+    visitors_count,
+    total_cost,
+    leads_count,
+    purchases_count,
+    revenue
+FROM final
 ORDER BY 
-    9 DESC NULLS LAST, 1, 2 DESC, 3, 4, 5
+    revenue DESC NULLS LAST, visit_date, utm_source DESC, utm_medium, utm_campaign, visitors_count
 LIMIT 15;
