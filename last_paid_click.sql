@@ -15,19 +15,21 @@ WITH visitors_with_leads AS (
     LEFT JOIN
         leads AS l
         ON s.visitor_id = l.visitor_id
-        AND s.visit_date <= l.created_at
+            AND s.visit_date <= l.created_at
     WHERE
-        s.medium != 'organic'
-    ORDER BY 
-        s.visitor_id, s.visit_date DESC
+        s.medium <> 'organic'
+    ORDER BY
+        s.visitor_id ASC, s.visit_date DESC
 )
-SELECT *
-FROM 
-	visitors_with_leads
+
+SELECT
+    *
+FROM
+    visitors_with_leads
 ORDER BY
-    amount DESC nulls last,
-    visit_date,
-    utm_source,
-    utm_medium,
-    utm_campaign
-LIMIT 10;
+    amount DESC NULLS LAST,
+    visit_date ASC,
+    utm_source ASC,
+    utm_medium ASC,
+    utm_campaign ASC
+LIMIT 10; 
