@@ -76,10 +76,10 @@ final AS (
 )
 SELECT
     visit_date,
+    visitors_count,
     utm_source,
     utm_medium,
     utm_campaign,
-    visitors_count,
     total_cost,
     leads_count,
     purchases_count,
