@@ -176,15 +176,15 @@ WITH aggregated_data AS (
 )
 SELECT
     'Visitors' AS stage,
-    visitors AS count
+    visitors AS total_count
 FROM aggregated_data
 UNION ALL
 SELECT
     'Leads' AS stage,
-    leads AS count
+    leads AS total_count
 FROM aggregated_data
 UNION ALL
 SELECT
     'Purchases' AS stage,
-    purchases AS count
+    purchases AS total_count
 FROM aggregated_data;
