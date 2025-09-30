@@ -13,7 +13,7 @@ WITH visitors_with_leads AS (
     FROM sessions AS s
     LEFT JOIN leads AS l
         ON s.visitor_id = l.visitor_id AND s.visit_date <= l.created_at
-    WHERE s.medium != 'organic'
+    WHERE s.medium <> 'organic'
     ORDER BY s.visitor_id ASC, s.visit_date DESC
 ),
 
@@ -99,8 +99,10 @@ WHERE visitors_count > 0;
 -- платный и органический трафик
 SELECT
     DATE(visit_date) AS visit_day,
-    COUNT(DISTINCT CASE WHEN medium <> 'organic' THEN visitor_id END) AS paid_visitors,
-    COUNT(DISTINCT CASE WHEN medium = 'organic' THEN visitor_id END) AS organic_visitors
+    COUNT(DISTINCT CASE WHEN medium <> 'organic' THEN visitor_id END)
+        AS paid_visitors,
+    COUNT(DISTINCT CASE WHEN medium = 'organic' THEN visitor_id END)
+        AS organic_visitors
 FROM sessions
 GROUP BY
     visit_day
@@ -174,6 +176,7 @@ WITH aggregated_data AS (
         COUNT(CASE WHEN status_id = 142 THEN 1 END) AS purchases
     FROM visitors_with_leads
 )
+
 SELECT
     'Visitors' AS stage,
     visitors AS total_count

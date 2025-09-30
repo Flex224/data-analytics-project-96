@@ -23,7 +23,16 @@ WITH visitors_with_leads AS (
 )
 
 SELECT
-    *
+    visitor_id,
+    visit_date,
+    utm_source,
+    utm_medium,
+    utm_campaign,
+    lead_id,
+    created_at,
+    amount,
+    closing_reason,
+    status_id
 FROM
     visitors_with_leads
 ORDER BY
