@@ -12,8 +12,7 @@ WITH visitors_with_leads AS (
         l.status_id
     FROM
         sessions AS s
-    LEFT JOIN
-        leads AS l
+    LEFT JOIN leads AS l
         ON s.visitor_id = l.visitor_id
             AND s.visit_date <= l.created_at
     WHERE
@@ -42,4 +41,3 @@ ORDER BY
     utm_medium ASC,
     utm_campaign ASC
 LIMIT 10;
-

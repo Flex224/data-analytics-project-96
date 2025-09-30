@@ -12,7 +12,8 @@ WITH visitors_with_leads AS (
         s.campaign AS utm_campaign
     FROM sessions AS s
     LEFT JOIN leads AS l
-        ON s.visitor_id = l.visitor_id AND s.visit_date <= l.created_at
+        ON s.visitor_id = l.visitor_id
+        AND s.visit_date <= l.created_at
     WHERE s.medium <> 'organic'
     ORDER BY s.visitor_id ASC, s.visit_date DESC
 ),
@@ -70,17 +71,16 @@ final AS (
         u.utm_medium,
         u.utm_campaign,
         u.visitors_count,
-        COALESCE(a.total_cost, 0) AS total_cost,
         u.leads_count,
         u.purchases_count,
+        COALESCE(a.total_cost, 0) AS total_cost,
         COALESCE(u.revenue, 0) AS revenue
     FROM utm_aggregates AS u
     LEFT JOIN ad_costs AS a
-        ON
-            u.visit_date = a.visit_date
-            AND u.utm_source = a.utm_source
-            AND u.utm_medium = a.utm_medium
-            AND u.utm_campaign = a.utm_campaign
+        ON u.visit_date = a.visit_date
+        AND u.utm_source = a.utm_source
+        AND u.utm_medium = a.utm_medium
+        AND u.utm_campaign = a.utm_campaign
 )
 
 SELECT
@@ -89,9 +89,9 @@ SELECT
     utm_medium,
     utm_campaign,
     visitors_count,
-    total_cost,
     leads_count,
     purchases_count,
+    total_cost,
     revenue
 FROM final
 WHERE visitors_count > 0;
@@ -104,10 +104,8 @@ SELECT
     COUNT(DISTINCT CASE WHEN medium = 'organic' THEN visitor_id END)
         AS organic_visitors
 FROM sessions
-GROUP BY
-    visit_day
-ORDER BY
-    visit_day ASC;
+GROUP BY visit_day
+ORDER BY visit_day ASC;
 
 -- Трафик по всем каналам
 SELECT
@@ -115,12 +113,8 @@ SELECT
     source,
     COUNT(DISTINCT visitor_id) AS total_visitors
 FROM sessions
-GROUP BY
-    source,
-    visit_day
-ORDER BY
-    visit_day ASC,
-    source ASC;
+GROUP BY source, visit_day
+ORDER BY visit_day ASC, source ASC;
 
 -- Эффективность рекламных кампаний
 SELECT
@@ -130,8 +124,8 @@ SELECT
     SUM(visitors_count) AS visitors_count,
     SUM(leads_count) AS leads_count,
     SUM(purchases_count) AS purchases_count,
-    SUM(revenue) AS revenue,
     SUM(total_cost) AS total_cost,
+    SUM(revenue) AS revenue,
     ROUND(SUM(total_cost) / NULLIF(SUM(visitors_count), 0), 2) AS cpu,
     ROUND(SUM(total_cost) / NULLIF(SUM(leads_count), 0), 2) AS cpl,
     ROUND(SUM(total_cost) / NULLIF(SUM(purchases_count), 0), 2) AS cppu,
@@ -143,8 +137,7 @@ GROUP BY
     utm_source,
     utm_medium,
     utm_campaign
-ORDER BY
-    roi DESC NULLS LAST;
+ORDER BY roi DESC NULLS LAST;
 
 -- Эффективность рекламных каналов
 SELECT
@@ -152,8 +145,8 @@ SELECT
     SUM(visitors_count) AS visitors_count,
     SUM(leads_count) AS leads_count,
     SUM(purchases_count) AS purchases_count,
-    SUM(revenue) AS revenue,
     SUM(total_cost) AS total_cost,
+    SUM(revenue) AS revenue,
     ROUND(SUM(total_cost) / NULLIF(SUM(visitors_count), 0), 2) AS cpu,
     ROUND(SUM(total_cost) / NULLIF(SUM(leads_count), 0), 2) AS cpl,
     ROUND(SUM(total_cost) / NULLIF(SUM(purchases_count), 0), 2) AS cppu,
@@ -161,12 +154,9 @@ SELECT
         (SUM(revenue) - SUM(total_cost)) * 100.0 / NULLIF(SUM(total_cost), 0), 2
     ) AS roi
 FROM final
-GROUP BY
-    utm_source
-HAVING
-    SUM(purchases_count) > 0
-ORDER BY
-    roi DESC NULLS LAST;
+GROUP BY utm_source
+HAVING SUM(purchases_count) > 0
+ORDER BY roi DESC NULLS LAST;
 
 -- воронка конверсий
 WITH aggregated_data AS (
@@ -178,17 +168,16 @@ WITH aggregated_data AS (
 )
 
 SELECT
-    'Visitors' AS stage,
+    'Visitors' AS conversion_stage,
     visitors AS total_count
 FROM aggregated_data
 UNION ALL
 SELECT
-    'Leads' AS stage,
+    'Leads' AS conversion_stage,
     leads AS total_count
 FROM aggregated_data
 UNION ALL
 SELECT
-    'Purchases' AS stage,
+    'Purchases' AS conversion_stage,
     purchases AS total_count
 FROM aggregated_data;
-
