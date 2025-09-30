@@ -10,12 +10,14 @@ WITH visitors_with_leads AS (
         s.source AS utm_source,
         s.medium AS utm_medium,
         s.campaign AS utm_campaign
-    FROM sessions AS s
-    LEFT JOIN leads AS l
-        ON s.visitor_id = l.visitor_id
-        AND s.visit_date <= l.created_at
-    WHERE s.medium <> 'organic'
-    ORDER BY s.visitor_id ASC, s.visit_date DESC
+    FROM
+        sessions AS s
+    LEFT JOIN
+        leads AS l ON s.visitor_id = l.visitor_id AND s.visit_date <= l.created_at
+    WHERE
+        s.medium <> 'organic'
+    ORDER BY
+        s.visitor_id ASC, s.visit_date DESC
 ),
 
 utm_aggregates AS (
@@ -25,10 +27,12 @@ utm_aggregates AS (
         utm_medium,
         utm_campaign,
         COUNT(visitor_id) AS visitors_count,
-        COUNT(CASE WHEN created_at IS NOT NULL THEN visitor_id END) AS leads_count,
+        COUNT(CASE WHEN created_at IS NOT NULL THEN visitor_id END)
+            AS leads_count,
         COUNT(CASE WHEN status_id = 142 THEN visitor_id END) AS purchases_count,
         SUM(CASE WHEN status_id = 142 THEN amount END) AS revenue
-    FROM visitors_with_leads
+    FROM
+        visitors_with_leads
     GROUP BY
         visit_date,
         utm_source,
@@ -43,7 +47,8 @@ ad_costs AS (
         utm_medium,
         utm_campaign,
         SUM(daily_spent) AS total_cost
-    FROM ya_ads
+    FROM
+        ya_ads
     GROUP BY
         visit_date,
         utm_source,
@@ -56,7 +61,8 @@ ad_costs AS (
         utm_medium,
         utm_campaign,
         SUM(daily_spent) AS total_cost
-    FROM vk_ads
+    FROM
+        vk_ads
     GROUP BY
         visit_date,
         utm_source,
@@ -75,12 +81,15 @@ final AS (
         u.purchases_count,
         COALESCE(a.total_cost, 0) AS total_cost,
         COALESCE(u.revenue, 0) AS revenue
-    FROM utm_aggregates AS u
-    LEFT JOIN ad_costs AS a
-        ON u.visit_date = a.visit_date
-        AND u.utm_source = a.utm_source
-        AND u.utm_medium = a.utm_medium
-        AND u.utm_campaign = a.utm_campaign
+    FROM
+        utm_aggregates AS u
+    LEFT JOIN
+        ad_costs AS a
+        ON
+            u.visit_date = a.visit_date
+            AND u.utm_source = a.utm_source
+            AND u.utm_medium = a.utm_medium
+            AND u.utm_campaign = a.utm_campaign
 )
 
 SELECT
@@ -93,8 +102,10 @@ SELECT
     purchases_count,
     total_cost,
     revenue
-FROM final
-WHERE visitors_count > 0;
+FROM
+    final
+WHERE
+    visitors_count > 0;
 
 -- платный и органический трафик
 SELECT
@@ -103,18 +114,24 @@ SELECT
         AS paid_visitors,
     COUNT(DISTINCT CASE WHEN medium = 'organic' THEN visitor_id END)
         AS organic_visitors
-FROM sessions
-GROUP BY visit_day
-ORDER BY visit_day ASC;
+FROM
+    sessions
+GROUP BY
+    visit_day
+ORDER BY
+    visit_day ASC;
 
 -- Трафик по всем каналам
 SELECT
     DATE(visit_date) AS visit_day,
     source,
     COUNT(DISTINCT visitor_id) AS total_visitors
-FROM sessions
-GROUP BY source, visit_day
-ORDER BY visit_day ASC, source ASC;
+FROM
+    sessions
+GROUP BY
+    source, visit_day
+ORDER BY
+    visit_day ASC, source ASC;
 
 -- Эффективность рекламных кампаний
 SELECT
@@ -132,12 +149,14 @@ SELECT
     ROUND(
         (SUM(revenue) - SUM(total_cost)) * 100.0 / NULLIF(SUM(total_cost), 0), 2
     ) AS roi
-FROM final
+FROM
+    final
 GROUP BY
     utm_source,
     utm_medium,
     utm_campaign
-ORDER BY roi DESC NULLS LAST;
+ORDER BY
+    roi DESC NULLS LAST;
 
 -- Эффективность рекламных каналов
 SELECT
@@ -153,10 +172,14 @@ SELECT
     ROUND(
         (SUM(revenue) - SUM(total_cost)) * 100.0 / NULLIF(SUM(total_cost), 0), 2
     ) AS roi
-FROM final
-GROUP BY utm_source
-HAVING SUM(purchases_count) > 0
-ORDER BY roi DESC NULLS LAST;
+FROM
+    final
+GROUP BY
+    utm_source
+HAVING
+    SUM(purchases_count) > 0
+ORDER BY
+    roi DESC NULLS LAST;
 
 -- воронка конверсий
 WITH aggregated_data AS (
@@ -164,20 +187,24 @@ WITH aggregated_data AS (
         COUNT(visitor_id) AS visitors,
         COUNT(lead_id) AS leads,
         COUNT(CASE WHEN status_id = 142 THEN 1 END) AS purchases
-    FROM visitors_with_leads
+    FROM
+        visitors_with_leads
 )
 
 SELECT
     'Visitors' AS conversion_stage,
     visitors AS total_count
-FROM aggregated_data
+FROM
+    aggregated_data
 UNION ALL
 SELECT
     'Leads' AS conversion_stage,
     leads AS total_count
-FROM aggregated_data
+FROM
+    aggregated_data
 UNION ALL
 SELECT
     'Purchases' AS conversion_stage,
     purchases AS total_count
-FROM aggregated_data;
+FROM
+    aggregated_data;

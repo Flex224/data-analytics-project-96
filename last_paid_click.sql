@@ -12,9 +12,8 @@ WITH visitors_with_leads AS (
         l.status_id
     FROM
         sessions AS s
-    LEFT JOIN leads AS l
-        ON s.visitor_id = l.visitor_id
-            AND s.visit_date <= l.created_at
+    LEFT JOIN
+        leads AS l ON s.visitor_id = l.visitor_id AND s.visit_date <= l.created_at
     WHERE
         s.medium <> 'organic'
     ORDER BY
