@@ -171,16 +171,3 @@ SELECT
     'Purchases' AS stage,
     purchases AS count
 FROM aggregated_data;
-
---90% лидов закрытие за () дней
-purchase_conversion_time AS (
-    SELECT
-      EXTRACT(day FROM created_at - visit_date) AS days_to_purchase
-    FROM visitors_with_leads
-    WHERE
-      status_id = 142
-  )
-  SELECT
-    PERCENTILE_DISC(0.9) WITHIN GROUP (ORDER BY
-      days_to_purchase) AS days_for_close
-  FROM purchase_conversion_time;
