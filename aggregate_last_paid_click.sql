@@ -63,10 +63,10 @@ final AS (
         u.utm_medium,
         u.utm_campaign,
         u.visitors_count,
-        COALESCE(a.total_cost, 0) AS total_cost,
+        a.total_cost,
         u.leads_count,
         u.purchases_count,
-        COALESCE(u.revenue, 0) AS revenue
+        u.revenue
     FROM utm_aggregates AS u
     LEFT JOIN ad_costs AS a
         ON  u.visit_date = a.visit_date
