@@ -13,13 +13,13 @@ WITH visitors_with_leads AS (
     FROM sessions AS s
     LEFT JOIN leads AS l
         ON
-            s.visitor_id = l.visitor_id
-            AND s.visit_date <= l.created_at
-    WHERE 
+            s.visitor_id = l.visitor_id AND s.visit_date <= l.created_at
+    WHERE
         s.medium != 'organic'
-    ORDER BY 
-        s.visitor_id, s.visit_date DESC
+    ORDER BY
+        s.visitor_id ASC, s.visit_date DESC
 ),
+
 utm_aggregates AS (
     SELECT
         utm_source,
@@ -35,8 +35,13 @@ utm_aggregates AS (
         COUNT(CASE WHEN status_id = 142 THEN visitor_id END) AS purchases_count,
         SUM(CASE WHEN status_id = 142 THEN amount END) AS revenue
     FROM visitors_with_leads
-    GROUP BY 1, 2, 3, 4
+    GROUP BY
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        visit_date
 ),
+
 ad_costs AS (
     SELECT
         DATE(campaign_date) AS visit_date,
@@ -45,7 +50,11 @@ ad_costs AS (
         utm_campaign,
         SUM(daily_spent) AS total_cost
     FROM ya_ads
-    GROUP BY 1, 2, 3, 4
+    GROUP BY
+        visit_date,
+        utm_source,
+        utm_medium,
+        utm_campaign
     UNION ALL
     SELECT
         DATE(campaign_date) AS visit_date,
@@ -54,8 +63,13 @@ ad_costs AS (
         utm_campaign,
         SUM(daily_spent) AS total_cost
     FROM vk_ads
-    GROUP BY 1, 2, 3, 4
+    GROUP BY
+        visit_date,
+        utm_source,
+        utm_medium,
+        utm_campaign
 ),
+
 final AS (
     SELECT
         u.visit_date,
@@ -66,14 +80,16 @@ final AS (
         a.total_cost,
         u.leads_count,
         u.purchases_count,
-        u.revenue
+        COALESCE(u.revenue, 0) AS revenue
     FROM utm_aggregates AS u
     LEFT JOIN ad_costs AS a
-        ON  u.visit_date = a.visit_date
-        AND u.utm_source = a.utm_source
-        AND u.utm_medium = a.utm_medium
-        AND u.utm_campaign = a.utm_campaign
+        ON
+            u.visit_date = a.visit_date
+            AND u.utm_source = a.utm_source
+            AND u.utm_medium = a.utm_medium
+            AND u.utm_campaign = a.utm_campaign
 )
+
 SELECT
     visit_date,
     visitors_count,
@@ -85,6 +101,11 @@ SELECT
     purchases_count,
     revenue
 FROM final
-ORDER BY 
-    revenue DESC NULLS LAST, visit_date, utm_source DESC, utm_medium, utm_campaign, visitors_count
+ORDER BY
+    revenue DESC NULLS LAST,
+    visit_date ASC,
+    utm_source DESC,
+    utm_medium ASC,
+    utm_campaign ASC,
+    visitors_count ASC
 LIMIT 15;
