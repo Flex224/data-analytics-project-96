@@ -191,3 +191,4 @@ SELECT
     'Purchases' AS stage,
     purchases AS total_count
 FROM aggregated_data;
+
