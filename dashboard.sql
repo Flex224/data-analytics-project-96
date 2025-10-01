@@ -109,11 +109,11 @@ WHERE
 
 -- платный и органический трафик
 SELECT
-    DATE(visit_date) AS visit_day,
     COUNT(DISTINCT CASE WHEN medium <> 'organic' THEN visitor_id END)
         AS paid_visitors,
     COUNT(DISTINCT CASE WHEN medium = 'organic' THEN visitor_id END)
-        AS organic_visitors
+        AS organic_visitors,
+    DATE(visit_date) AS visit_day
 FROM
     sessions
 GROUP BY
