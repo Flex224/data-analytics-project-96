@@ -17,13 +17,12 @@ WITH visitors_with_leads AS (
     WHERE s.medium != 'organic'
     ORDER BY s.visitor_id ASC, s.visit_date DESC
 ),
-
-utm_aggregates AS (
+utm_aggregate AS (
     SELECT
         utm_source,
         utm_medium,
         utm_campaign,
-        DATE(visit_date) AS visit_date,
+        CAST(visit_date AS date) AS visit_date,
         COUNT(visitor_id) AS visitors_count,
         COUNT(
         	CASE 
@@ -39,7 +38,6 @@ utm_aggregates AS (
         utm_campaign,
         visit_date
 ),
-
 ad_costs AS (
     SELECT
         DATE(campaign_date) AS visit_date,
@@ -67,7 +65,6 @@ ad_costs AS (
         utm_medium,
         utm_campaign
 )
-
 SELECT
     u.visit_date,
     u.visitors_count,
@@ -78,7 +75,7 @@ SELECT
     u.leads_count,
     u.purchases_count,
     u.revenue
-FROM utm_aggregates AS u
+FROM utm_aggregate AS u
 LEFT JOIN ad_costs AS a
     ON u.visit_date = a.visit_date
     AND u.utm_source = a.utm_source
