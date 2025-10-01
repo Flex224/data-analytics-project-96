@@ -22,10 +22,10 @@ WITH visitors_with_leads AS (
 
 utm_aggregates AS (
     SELECT
-        DATE(visit_date) AS visit_date,
         utm_source,
         utm_medium,
         utm_campaign,
+        DATE(visit_date) AS visit_date,
         COUNT(visitor_id) AS visitors_count,
         COUNT(CASE WHEN created_at IS NOT NULL THEN visitor_id END)
             AS leads_count,
@@ -189,22 +189,28 @@ WITH aggregated_data AS (
         COUNT(CASE WHEN status_id = 142 THEN 1 END) AS purchases
     FROM
         visitors_with_leads
+),
+funnel_stages AS (
+    SELECT 'Visitors' AS conversion_stage, 1 AS sort_order
+    UNION ALL
+    SELECT 'Leads', 2
+    UNION ALL
+    SELECT 'Purchases', 3
+),
+funnel_values AS (
+    SELECT visitors AS total_count, 1 AS sort_order FROM aggregated_data
+    UNION ALL
+    SELECT leads, 2 FROM aggregated_data
+    UNION ALL
+    SELECT purchases, 3 FROM aggregated_data
 )
-
 SELECT
-    'Visitors' AS conversion_stage,
-    visitors AS total_count
+    s.conversion_stage,
+    v.total_count
 FROM
-    aggregated_data
-UNION ALL
-SELECT
-    'Leads' AS conversion_stage,
-    leads AS total_count
-FROM
-    aggregated_data
-UNION ALL
-SELECT
-    'Purchases' AS conversion_stage,
-    purchases AS total_count
-FROM
-    aggregated_data;
+    funnel_stages s
+JOIN
+    funnel_values v
+    ON s.sort_order = v.sort_order
+ORDER BY
+    s.sort_order;
