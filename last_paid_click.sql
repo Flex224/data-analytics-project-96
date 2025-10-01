@@ -19,7 +19,6 @@ WITH visitors_with_leads AS (
     ORDER BY
         s.visitor_id ASC, s.visit_date DESC
 )
-
 SELECT
     visitor_id,
     visit_date,
