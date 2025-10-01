@@ -123,8 +123,8 @@ ORDER BY
 
 -- Трафик по всем каналам
 SELECT
-    DATE(visit_date) AS visit_day,
     source,
+    DATE(visit_date) AS visit_day,
     COUNT(DISTINCT visitor_id) AS total_visitors
 FROM
     sessions
