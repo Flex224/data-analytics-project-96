@@ -68,13 +68,13 @@ SELECT
     u.leads_count,
     u.purchases_count,
     u.revenue
-FROM
-    utm_aggregates AS u
+FROM utm_aggregates AS u
 LEFT JOIN ad_costs AS a
-    ON u.visit_date = a.visit_date
-    AND u.utm_source = a.utm_source
-    AND u.utm_medium = a.utm_medium
-    AND u.utm_campaign = a.utm_campaign
+    ON 
+        u.visit_date = a.visit_date
+        AND u.utm_source = a.utm_source
+        AND u.utm_medium = a.utm_medium
+        AND u.utm_campaign = a.utm_campaign
 ORDER BY
     u.revenue DESC NULLS LAST,
     u.visit_date ASC,
