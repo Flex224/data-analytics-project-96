@@ -15,8 +15,7 @@ WITH visitors_with_leads AS (
     LEFT JOIN leads AS l
         ON
             s.visitor_id = l.visitor_id
-        AND
-            s.visit_date <= l.created_at
+            AND s.visit_date <= l.created_at
     WHERE s.medium != 'organic'
     ORDER BY s.visitor_id ASC, s.visit_date DESC
 ),
@@ -69,10 +68,9 @@ SELECT
     u.leads_count,
     u.purchases_count,
     u.revenue
-FROM 
+FROM
     utm_aggregates AS u
-LEFT JOIN 
-    ad_costs AS a
+LEFT JOIN ad_costs AS a
     ON u.visit_date = a.visit_date
     AND u.utm_source = a.utm_source
     AND u.utm_medium = a.utm_medium
