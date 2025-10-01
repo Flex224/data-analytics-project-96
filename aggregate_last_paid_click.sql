@@ -70,7 +70,7 @@ SELECT
     u.revenue
 FROM utm_aggregates AS u
 LEFT JOIN ad_costs AS a
-    ON 
+    ON
         u.visit_date = a.visit_date
         AND u.utm_source = a.utm_source
         AND u.utm_medium = a.utm_medium
