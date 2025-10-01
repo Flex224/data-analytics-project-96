@@ -12,9 +12,9 @@ WITH visitors_with_leads AS (
         s.source AS utm_source
     FROM
             sessions AS s
-            LEFT JOIN leads AS l
-                ON s.visitor_id = l.visitor_id
-                AND s.visit_date <= l.created_at
+    LEFT JOIN leads AS l
+        ON s.visitor_id = l.visitor_id
+        AND s.visit_date <= l.created_at
     WHERE s.medium != 'organic'
     ORDER BY s.visitor_id ASC, s.visit_date DESC
 ),
@@ -67,7 +67,8 @@ SELECT
         u.leads_count,
         u.purchases_count,
         u.revenue
-FROM utm_aggregates AS u
+FROM
+        utm_aggregates AS u
 LEFT JOIN ad_costs AS a
     ON u.visit_date = a.visit_date
     AND u.utm_source = a.utm_source
