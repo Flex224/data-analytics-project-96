@@ -190,27 +190,45 @@ WITH aggregated_data AS (
     FROM
         visitors_with_leads
 ),
+
 funnel_stages AS (
-    SELECT 'Visitors' AS conversion_stage, 1 AS sort_order
+    SELECT
+        'Visitors' AS conversion_stage,
+        1 AS sort_order
     UNION ALL
-    SELECT 'Leads', 2
+    SELECT
+        'Leads' AS conversion_stage,
+        2 AS sort_order
     UNION ALL
-    SELECT 'Purchases', 3
+    SELECT
+        'Purchases' AS conversion_stage,
+        3 AS sort_order
 ),
+
 funnel_values AS (
-    SELECT visitors AS total_count, 1 AS sort_order FROM aggregated_data
+    SELECT
+        visitors AS total_count,
+        1 AS sort_order
+    FROM aggregated_data
     UNION ALL
-    SELECT leads, 2 FROM aggregated_data
+    SELECT
+        leads AS total_count,
+        2 AS sort_order
+    FROM aggregated_data
     UNION ALL
-    SELECT purchases, 3 FROM aggregated_data
+    SELECT
+        purchases AS total_count,
+        3 AS sort_order
+    FROM aggregated_data
 )
+
 SELECT
     s.conversion_stage,
     v.total_count
 FROM
-    funnel_stages s
-JOIN
-    funnel_values v
+    funnel_stages AS s
+INNER JOIN
+    funnel_values AS v
     ON s.sort_order = v.sort_order
 ORDER BY
     s.sort_order;
