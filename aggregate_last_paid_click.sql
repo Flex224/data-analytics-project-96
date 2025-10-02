@@ -7,15 +7,13 @@ WITH visitors_with_leads AS (
         l.amount,
         l.closing_reason,
         l.status_id,
+        s.source AS utm_source,
         s.medium AS utm_medium,
-        s.campaign AS utm_campaign,
-        s.source AS utm_source
-    FROM
-        sessions AS s
+        s.campaign AS utm_campaign
+    FROM sessions AS s
     LEFT JOIN leads AS l
-        ON
-            s.visitor_id = l.visitor_id
-            AND s.visit_date <= l.created_at
+        ON s.visitor_id = l.visitor_id
+        AND s.visit_date <= l.created_at
     WHERE s.medium != 'organic'
     ORDER BY s.visitor_id ASC, s.visit_date DESC
 ),
@@ -32,10 +30,10 @@ utm_aggregates AS (
                 WHEN created_at IS NOT NULL THEN visitor_id
             END
         ) AS leads_count,
-        COUNT(CASE WHEN status_id = 142 THEN visitor_id END) AS purchases_count,
+        COUNT(CASE WHEN status_id = 142 THEN 1 END) AS purchases_count,
         SUM(CASE WHEN status_id = 142 THEN amount END) AS revenue
     FROM visitors_with_leads
-    GROUP BY utm_source, utm_medium, utm_campaign, visit_date
+    GROUP BY 1, 2, 3, 4
 ),
 
 ad_costs AS (
@@ -46,7 +44,7 @@ ad_costs AS (
         utm_campaign,
         SUM(daily_spent) AS total_cost
     FROM ya_ads
-    GROUP BY visit_date, utm_source, utm_medium, utm_campaign
+    GROUP BY 1, 2, 3, 4
     UNION ALL
     SELECT
         DATE(campaign_date) AS visit_date,
@@ -55,7 +53,7 @@ ad_costs AS (
         utm_campaign,
         SUM(daily_spent) AS total_cost
     FROM vk_ads
-    GROUP BY utm_source, utm_medium, utm_campaign, visit_date
+    GROUP BY 1, 2, 3, 4
 )
 
 SELECT
