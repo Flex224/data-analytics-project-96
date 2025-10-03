@@ -15,7 +15,7 @@ WITH visitors_with_leads AS (
     LEFT JOIN leads AS l
         ON s.visitor_id = l.visitor_id AND s.visit_date <= l.created_at
     WHERE
-        s.medium <> 'organic'
+        s.medium != 'organic'
     ORDER BY
         s.visitor_id ASC, s.visit_date DESC
 ),
@@ -92,46 +92,28 @@ final AS (
             AND u.utm_campaign = a.utm_campaign
 )
 
+-- Эффективность рекламных каналов
 SELECT
-    visit_date,
     utm_source,
-    utm_medium,
-    utm_campaign,
-    visitors_count,
-    leads_count,
-    purchases_count,
-    total_cost,
-    revenue
+    SUM(visitors_count) AS visitors_count,
+    SUM(leads_count) AS leads_count,
+    SUM(purchases_count) AS purchases_count,
+    SUM(total_cost) AS total_cost,
+    SUM(revenue) AS revenue,
+    ROUND(SUM(total_cost) / NULLIF(SUM(visitors_count), 0), 2) AS cpu,
+    ROUND(SUM(total_cost) / NULLIF(SUM(leads_count), 0), 2) AS cpl,
+    ROUND(SUM(total_cost) / NULLIF(SUM(purchases_count), 0), 2) AS cppu,
+    ROUND(
+        (SUM(revenue) - SUM(total_cost)) * 100.0 / NULLIF(SUM(total_cost), 0), 2
+    ) AS roi
 FROM
     final
-WHERE
-    visitors_count > 0;
-
--- платный и органический трафик
-SELECT
-    COUNT(DISTINCT CASE WHEN medium <> 'organic' THEN visitor_id END)
-        AS paid_visitors,
-    COUNT(DISTINCT CASE WHEN medium = 'organic' THEN visitor_id END)
-        AS organic_visitors,
-    DATE(visit_date) AS visit_day
-FROM
-    sessions
 GROUP BY
-    visit_day
+    utm_source
+HAVING
+    SUM(purchases_count) > 0
 ORDER BY
-    visit_day ASC;
-
--- Трафик по всем каналам
-SELECT
-    source,
-    DATE(visit_date) AS visit_day,
-    COUNT(DISTINCT visitor_id) AS total_visitors
-FROM
-    sessions
-GROUP BY
-    source, visit_day
-ORDER BY
-    visit_day ASC, source ASC;
+    roi DESC NULLS LAST;
 
 -- Эффективность рекламных кампаний
 SELECT
@@ -157,78 +139,3 @@ GROUP BY
     utm_campaign
 ORDER BY
     roi DESC NULLS LAST;
-
--- Эффективность рекламных каналов
-SELECT
-    utm_source,
-    SUM(visitors_count) AS visitors_count,
-    SUM(leads_count) AS leads_count,
-    SUM(purchases_count) AS purchases_count,
-    SUM(total_cost) AS total_cost,
-    SUM(revenue) AS revenue,
-    ROUND(SUM(total_cost) / NULLIF(SUM(visitors_count), 0), 2) AS cpu,
-    ROUND(SUM(total_cost) / NULLIF(SUM(leads_count), 0), 2) AS cpl,
-    ROUND(SUM(total_cost) / NULLIF(SUM(purchases_count), 0), 2) AS cppu,
-    ROUND(
-        (SUM(revenue) - SUM(total_cost)) * 100.0 / NULLIF(SUM(total_cost), 0), 2
-    ) AS roi
-FROM
-    final
-GROUP BY
-    utm_source
-HAVING
-    SUM(purchases_count) > 0
-ORDER BY
-    roi DESC NULLS LAST;
-
--- воронка конверсий
-WITH aggregated_data AS (
-    SELECT
-        COUNT(visitor_id) AS visitors,
-        COUNT(lead_id) AS leads,
-        COUNT(CASE WHEN status_id = 142 THEN 1 END) AS purchases
-    FROM
-        visitors_with_leads
-),
-
-funnel_stages AS (
-    SELECT
-        'Visitors' AS conversion_stage,
-        1 AS sort_order
-    UNION ALL
-    SELECT
-        'Leads' AS conversion_stage,
-        2 AS sort_order
-    UNION ALL
-    SELECT
-        'Purchases' AS conversion_stage,
-        3 AS sort_order
-),
-
-funnel_values AS (
-    SELECT
-        visitors AS total_count,
-        1 AS sort_order
-    FROM aggregated_data
-    UNION ALL
-    SELECT
-        leads AS total_count,
-        2 AS sort_order
-    FROM aggregated_data
-    UNION ALL
-    SELECT
-        purchases AS total_count,
-        3 AS sort_order
-    FROM aggregated_data
-)
-
-SELECT
-    s.conversion_stage,
-    v.total_count
-FROM
-    funnel_stages AS s
-INNER JOIN
-    funnel_values AS v
-    ON s.sort_order = v.sort_order
-ORDER BY
-    s.sort_order;
