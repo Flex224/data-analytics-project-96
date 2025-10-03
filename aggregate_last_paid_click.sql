@@ -33,7 +33,11 @@ utm_aggregates AS (
         COUNT(CASE WHEN status_id = 142 THEN 1 END) AS purchases_count,
         SUM(CASE WHEN status_id = 142 THEN amount END) AS revenue
     FROM visitors_with_leads
-    GROUP BY 1, 2, 3, 4
+    GROUP BY
+        visit_date,
+        utm_source,
+        utm_medium,
+        utm_campaign
 ),
 
 ad_costs AS (
@@ -44,7 +48,11 @@ ad_costs AS (
         utm_campaign,
         SUM(daily_spent) AS total_cost
     FROM ya_ads
-    GROUP BY 1, 2, 3, 4
+    GROUP BY
+        visit_date,
+        utm_source,
+        utm_medium,
+        utm_campaign
     UNION ALL
     SELECT
         DATE(campaign_date) AS visit_date,
@@ -53,7 +61,11 @@ ad_costs AS (
         utm_campaign,
         SUM(daily_spent) AS total_cost
     FROM vk_ads
-    GROUP BY 1, 2, 3, 4
+    GROUP BY
+        visit_date,
+        utm_source,
+        utm_medium,
+        utm_campaign
 )
 
 SELECT
