@@ -12,8 +12,9 @@ WITH visitors_with_leads AS (
         s.campaign AS utm_campaign
     FROM sessions AS s
     LEFT JOIN leads AS l
-        ON s.visitor_id = l.visitor_id
-        AND s.visit_date <= l.created_at
+        ON 
+            s.visitor_id = l.visitor_id
+            AND s.visit_date <= l.created_at
     WHERE s.medium != 'organic'
     ORDER BY s.visitor_id ASC, s.visit_date DESC
 ),
