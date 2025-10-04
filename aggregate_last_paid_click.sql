@@ -79,8 +79,8 @@ SELECT
     u.leads_count,
     u.purchases_count,
     u.revenue
-FROM utm_aggregates AS u
-LEFT JOIN ad_costs AS a
+FROM ad_costs AS a
+LEFT JOIN utm_aggregates AS u
     ON
         u.visit_date = a.visit_date
         AND u.utm_source = a.utm_source
