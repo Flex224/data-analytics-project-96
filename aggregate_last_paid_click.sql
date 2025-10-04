@@ -67,44 +67,30 @@ ad_costs AS (
         utm_source,
         utm_medium,
         utm_campaign
-),
-
-final_data AS (
-    SELECT
-        u.visit_date,
-        u.utm_source,
-        u.utm_medium,
-        u.utm_campaign,
-        u.visitors_count,
-        a.total_cost,
-        u.leads_count,
-        u.purchases_count,
-        u.revenue
-    FROM utm_aggregates AS u
-    LEFT JOIN ad_costs AS a
-        ON
-            u.visit_date = a.visit_date
-            AND u.utm_source = a.utm_source
-            AND u.utm_medium = a.utm_medium
-            AND u.utm_campaign = a.utm_campaign
 )
 
 SELECT
-    visit_date,
-    visitors_count,
-    utm_source,
-    utm_medium,
-    utm_campaign,
-    total_cost,
-    leads_count,
-    purchases_count,
-    revenue
-FROM final_data
+    u.visit_date,
+    u.visitors_count,
+    u.utm_source,
+    u.utm_medium,
+    u.utm_campaign,
+    a.total_cost,
+    u.leads_count,
+    u.purchases_count,
+    u.revenue
+FROM utm_aggregates AS u
+LEFT JOIN ad_costs AS a
+    ON
+        u.visit_date = a.visit_date
+        AND u.utm_source = a.utm_source
+        AND u.utm_medium = a.utm_medium
+        AND u.utm_campaign = a.utm_campaign
 ORDER BY
-    revenue DESC NULLS LAST,
-    visit_date ASC,
-    visitors_count DESC,
-    utm_source ASC,
-    utm_medium ASC,
-    utm_campaign ASC
+    u.revenue DESC NULLS LAST,
+    u.visit_date ASC,
+    u.visitors_count DESC,
+    u.utm_source ASC,
+    u.utm_medium ASC,
+    u.utm_campaign ASC
 LIMIT 15;
