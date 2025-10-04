@@ -79,8 +79,8 @@ final AS (
         u.visitors_count,
         u.leads_count,
         u.purchases_count,
-        COALESCE(a.total_cost, 0) AS total_cost,
-        COALESCE(u.revenue, 0) AS revenue
+        a.total_cost,
+        u.revenue
     FROM
         utm_aggregates AS u
     LEFT JOIN
