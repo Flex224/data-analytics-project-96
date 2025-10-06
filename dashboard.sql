@@ -10,31 +10,32 @@ WITH visitors_with_leads AS (
         s.source AS utm_source,
         s.medium AS utm_medium,
         s.campaign AS utm_campaign
-    FROM
-        sessions AS s
+    FROM sessions AS s
     LEFT JOIN leads AS l
-        ON s.visitor_id = l.visitor_id AND s.visit_date <= l.created_at
-    WHERE
-        s.medium != 'organic'
+        ON
+            s.visitor_id = l.visitor_id
+            AND s.visit_date <= l.created_at
+    WHERE s.medium != 'organic'
     ORDER BY
-        s.visitor_id ASC, s.visit_date DESC
+        s.visitor_id ASC,
+        s.visit_date DESC
 ),
 
 utm_aggregates AS (
     SELECT
+        DATE(visit_date) AS visit_date,
         utm_source,
         utm_medium,
         utm_campaign,
-        DATE(visit_date) AS visit_date,
         COUNT(visitor_id) AS visitors_count,
-        COUNT(CASE WHEN created_at IS NOT NULL THEN visitor_id END)
+        COUNT(CASE WHEN created_at IS NOT NULL THEN visitor_id END) 
             AS leads_count,
-        COUNT(CASE WHEN status_id = 142 THEN visitor_id END) AS purchases_count,
+        COUNT(CASE WHEN status_id = 142 THEN visitor_id END) 
+            AS purchases_count,
         SUM(CASE WHEN status_id = 142 THEN amount END) AS revenue
-    FROM
-        visitors_with_leads
+    FROM visitors_with_leads
     GROUP BY
-        visit_date,
+        DATE(visit_date),
         utm_source,
         utm_medium,
         utm_campaign
@@ -47,10 +48,9 @@ ad_costs AS (
         utm_medium,
         utm_campaign,
         SUM(daily_spent) AS total_cost
-    FROM
-        ya_ads
+    FROM ya_ads
     GROUP BY
-        visit_date,
+        DATE(campaign_date),
         utm_source,
         utm_medium,
         utm_campaign
@@ -61,10 +61,9 @@ ad_costs AS (
         utm_medium,
         utm_campaign,
         SUM(daily_spent) AS total_cost
-    FROM
-        vk_ads
+    FROM vk_ads
     GROUP BY
-        visit_date,
+        DATE(campaign_date),
         utm_source,
         utm_medium,
         utm_campaign
@@ -77,14 +76,12 @@ final AS (
         u.utm_medium,
         u.utm_campaign,
         u.visitors_count,
+        COALESCE(a.total_cost, 0) AS total_cost,
         u.leads_count,
         u.purchases_count,
-        a.total_cost,
-        u.revenue
-    FROM
-        utm_aggregates AS u
-    LEFT JOIN
-        ad_costs AS a
+        COALESCE(u.revenue, 0) AS revenue
+    FROM utm_aggregates AS u
+    LEFT JOIN ad_costs AS a
         ON
             u.visit_date = a.visit_date
             AND u.utm_source = a.utm_source
@@ -106,14 +103,10 @@ SELECT
     ROUND(
         (SUM(revenue) - SUM(total_cost)) * 100.0 / NULLIF(SUM(total_cost), 0), 2
     ) AS roi
-FROM
-    final
-GROUP BY
-    utm_source
-HAVING
-    SUM(purchases_count) > 0
-ORDER BY
-    roi DESC NULLS LAST;
+FROM final
+GROUP BY utm_source
+HAVING SUM(purchases_count) > 0
+ORDER BY roi DESC NULLS LAST;
 
 -- Эффективность рекламных кампаний
 SELECT
@@ -123,19 +116,17 @@ SELECT
     SUM(visitors_count) AS visitors_count,
     SUM(leads_count) AS leads_count,
     SUM(purchases_count) AS purchases_count,
-    SUM(total_cost) AS total_cost,
     SUM(revenue) AS revenue,
+    SUM(total_cost) AS total_cost,
     ROUND(SUM(total_cost) / NULLIF(SUM(visitors_count), 0), 2) AS cpu,
     ROUND(SUM(total_cost) / NULLIF(SUM(leads_count), 0), 2) AS cpl,
     ROUND(SUM(total_cost) / NULLIF(SUM(purchases_count), 0), 2) AS cppu,
     ROUND(
         (SUM(revenue) - SUM(total_cost)) * 100.0 / NULLIF(SUM(total_cost), 0), 2
     ) AS roi
-FROM
-    final
+FROM final
 GROUP BY
     utm_source,
     utm_medium,
     utm_campaign
-ORDER BY
-    roi DESC NULLS LAST;
+ORDER BY roi DESC NULLS LAST;
