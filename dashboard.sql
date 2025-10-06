@@ -23,14 +23,14 @@ WITH visitors_with_leads AS (
 
 utm_aggregates AS (
     SELECT
-        DATE(visit_date) AS visit_date,
         utm_source,
         utm_medium,
         utm_campaign,
+        DATE(visit_date) AS visit_date,
         COUNT(visitor_id) AS visitors_count,
-        COUNT(CASE WHEN created_at IS NOT NULL THEN visitor_id END) 
+        COUNT(CASE WHEN created_at IS NOT NULL THEN visitor_id END)
             AS leads_count,
-        COUNT(CASE WHEN status_id = 142 THEN visitor_id END) 
+        COUNT(CASE WHEN status_id = 142 THEN visitor_id END)
             AS purchases_count,
         SUM(CASE WHEN status_id = 142 THEN amount END) AS revenue
     FROM visitors_with_leads
@@ -76,9 +76,9 @@ final AS (
         u.utm_medium,
         u.utm_campaign,
         u.visitors_count,
-        COALESCE(a.total_cost, 0) AS total_cost,
         u.leads_count,
         u.purchases_count,
+        COALESCE(a.total_cost, 0) AS total_cost,
         COALESCE(u.revenue, 0) AS revenue
     FROM utm_aggregates AS u
     LEFT JOIN ad_costs AS a
